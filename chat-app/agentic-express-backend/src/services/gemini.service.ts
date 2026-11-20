@@ -1,22 +1,30 @@
 import { GoogleGenAI } from "@google/genai";
 
 export class GeminiService {
-    private apiKey: string;
-    private modelName: string;
-    private genAI: GoogleGenAI;
+    private static instance: GeminiService;
+    private readonly modelName: string;
+    private readonly genAI: GoogleGenAI;
 
-    constructor(apiKey: string, modelName: string) {
-        this.apiKey = apiKey;
-        this.modelName = modelName;
+    constructor() {
+        const apiKey = process.env.GEMINI_API_KEY;
+        const modelName = process.env.GEMINI_MODEL;
 
-        if (!this.apiKey) {
-            throw new Error("API key is required for GeminiService");
+        if (!apiKey) {
+            throw new Error("API key is required.");
         };
 
-        if (!this.modelName) {
-            throw new Error("Model name is required for GeminiService");
+        if (!modelName) {
+            throw new Error("Model name is required.");
         }
-        this.genAI = new GoogleGenAI({ apiKey: this.apiKey });
+        this.modelName = modelName;
+        this.genAI = new GoogleGenAI({ apiKey: apiKey });
+    }
+
+    static getInstance(): GeminiService {
+        if (!this.instance) {
+            this.instance = new GeminiService();
+        }
+        return this.instance;
     }
 
     async generateResponse(prompt: string): Promise<string> {
@@ -59,9 +67,6 @@ export class GeminiService {
         }
     }
 
-
-
-
-
 }
 
+export const GEMINI = GeminiService.getInstance();

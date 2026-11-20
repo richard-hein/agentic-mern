@@ -1,0 +1,9 @@
+import express from "express";
+import { ChatController } from "../controller/chat.controller.ts";
+
+
+const router = express.Router();
+
+router.post("/chat", ChatController.generateResponse)
+
+export default router;
