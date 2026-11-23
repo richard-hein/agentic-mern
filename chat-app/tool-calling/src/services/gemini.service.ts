@@ -7,9 +7,9 @@ export class GeminiService {
     private readonly modelName: string;
     private readonly genAI: GoogleGenAI;
 
-    constructor() {
+    constructor(modelName: string = process.env.GEMINI_MODEL!) {
         const apiKey = process.env.GEMINI_API_KEY;
-        const modelName = process.env.GEMINI_MODEL;
+
 
         if (!apiKey) {
             throw new Error("API key is required.");
@@ -22,9 +22,9 @@ export class GeminiService {
         this.genAI = new GoogleGenAI({ apiKey: apiKey });
     }
 
-    static getInstance(): GeminiService {
+    static getInstance(modelName?: string): GeminiService {
         if (!this.instance) {
-            this.instance = new GeminiService();
+            this.instance = new GeminiService(modelName);
         }
         return this.instance;
     }
