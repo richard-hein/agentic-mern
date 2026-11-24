@@ -1,4 +1,4 @@
-import { WeatherController } from './../controller/weather.controller.ts';
+import { WeatherController } from '../controller/weather.controller.ts';
 import express from "express";
 
 const router = express.Router();

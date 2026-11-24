@@ -1,12 +1,13 @@
 import type { Response } from "express";
 
 export class HttpError extends Error {
-    constructor(
-        readonly status: number,
-        message: string,
-        readonly details?: unknown,
-    ) {
+    readonly status: number;
+    readonly details?: unknown;
+
+    constructor(status: number, message: string, details?: unknown) {
         super(message);
+        this.status = status;
+        this.details = details;
     }
 }
 

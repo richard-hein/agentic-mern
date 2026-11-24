@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import OpenAI from "openai/index.js";
 
 export class OpenAIProvider {
     constructor(apiKey, modelName) {

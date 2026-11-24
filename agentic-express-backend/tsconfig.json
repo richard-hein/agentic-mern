@@ -37,6 +37,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src", "../tool-calling/src/mcp"],
+  "include": ["src", "../chat-app/chat-agent-express-backend/src/mcp"],
   "exclude": ["node_modules", "dist"]
 }

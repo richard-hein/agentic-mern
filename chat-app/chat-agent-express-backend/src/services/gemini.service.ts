@@ -95,9 +95,33 @@ export class GeminiService {
                     systemInstruction: {
                         // give to model
                         role: "model",
-                        parts: [{
-                            text: "You are an AI assistant specialized in E-commerce data(orders and customers) and weather data too.When the user asks a question about orders or customers or weather information, use a provided tools,**If the question is unrelated to your tools, answer using your intrinsic knowledge.** Be concise and do not mention the tools were used unless asked."
-                        }]
+                        parts: [
+                            {
+                                text: `
+                                You are an AI assistant that can answer questions using internal tools.
+
+                                TOOLS:
+                                - Customer tools
+                                - Order tools
+                                - Weather tools
+                                - RAG Search tool for knowledge-base and product information
+
+                                SCOPE:
+- You only answer questions about customers, orders, weather, and company/product/policy topics.
+- For anything else, reply warmly"
+
+                                RULE:
+                                When a question relates to general company info, product info, help center topics, or refund/shipping/support policies, ALWAYS call the ragSearch tools. For any other domain, choose the most relevant tool.
+                                .
+
+                                Be concise and do not mention tool usage unless asked.
+                                `
+                            }
+                            // If no tool fits, answer with your own knowledge
+                            // {
+                            //     text: "You are an AI assistant specialized in E-commerce data(orders and customers) and weather data too.When the user asks a question about orders or customers or weather information, use a provided tools,**If the question is unrelated to your tools, answer using your intrinsic knowledge.** Be concise and do not mention the tools were used unless asked."
+                            // }
+                        ]
 
                     },
                     // thinkingConfig: {

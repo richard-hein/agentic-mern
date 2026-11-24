@@ -1,5 +1,5 @@
-import OpenAI from "openai";
-import type { ChatCompletionFunctionTool, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
+import OpenAI from "openai/index.js";
+import type { ChatCompletionFunctionTool, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions.js";
 import type { Client } from "@modelcontextprotocol/sdk/client";
 
 const MAX_TOOL_ROUNDS = 5;

@@ -79,6 +79,7 @@ export function registerOrderTools(mcpServer: McpServer) {
                             city: z.string(),
                             country: z.string(),
                             tier: z.string(),
+                            createdAt: z.string(),
                         })
                     })
                 )

@@ -1,9 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import Markdown, { type Components } from "react-markdown";
 import type { ChatMessage, Part, Source } from "@/app/lib/types";
 
 type ToolPart = Extract<Part, { type: "tool" }>;
+
+// shortcut: common blocks only; add heading/table mappings if answers start using them.
+const markdown: Components = {
+  p: ({ children }) => <p className="break-words">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc space-y-1 pl-5">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal space-y-1 pl-5">{children}</ol>,
+  li: ({ children }) => <li className="break-words">{children}</li>,
+  code: ({ children }) => (
+    <code className="rounded bg-white/60 px-1 py-0.5 font-mono text-[13px]">{children}</code>
+  ),
+  pre: ({ children }) => (
+    <pre className="overflow-x-auto rounded-lg bg-white/60 p-3 font-mono text-[13px]">{children}</pre>
+  ),
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noreferrer" className="text-accent underline">
+      {children}
+    </a>
+  ),
+};
 
 export function MessageView({ message }: { message: ChatMessage }) {
   const fromUser = message.role === "user";
@@ -19,16 +39,18 @@ export function MessageView({ message }: { message: ChatMessage }) {
       >
         {message.parts.map((part, i) =>
           part.type === "text" ? (
-            <p
-              key={i}
-              className={
-                fromUser
-                  ? "whitespace-pre-wrap break-words"
-                  : "whitespace-pre-wrap break-words bg-slate-300 px-3 py-4 rounded-lg w-[90%]"
-              }
-            >
-              {part.text}
-            </p>
+            fromUser ? (
+              <p key={i} className="whitespace-pre-wrap break-words">
+                {part.text}
+              </p>
+            ) : (
+              <div
+                key={i}
+                className="w-[90%] space-y-2 rounded-lg bg-slate-300 px-3 py-4"
+              >
+                <Markdown components={markdown}>{part.text}</Markdown>
+              </div>
+            )
           ) : part.type === "sources" ? (
             <Sources key={i} sources={part.sources} />
           ) : (
