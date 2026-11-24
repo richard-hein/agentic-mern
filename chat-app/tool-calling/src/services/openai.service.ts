@@ -1,7 +1,6 @@
 import OpenAI from "openai";
-import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
-import { WeatherService } from "./weather.service.ts";
-import { CustomerService } from "./customer.service.ts";
+import type { ChatCompletionFunctionTool, ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
+import type { Client } from "@modelcontextprotocol/sdk/client";
 
 const MAX_TOOL_ROUNDS = 5;
 
@@ -71,61 +70,29 @@ export class OpenaiService {
         }
     }
 
-    private async runTool(name: string, args: Record<string, unknown>): Promise<unknown> {
-        switch (name) {
-            case "get_current_weather": {
-                const location = args.location;
-                if (typeof location !== "string") throw new Error("Invalid location");
-
-                return WeatherService.fetchWeatherData(location);
-            }
-
-            case "get_all_customers":
-                return CustomerService.list();
-
-            default:
-                throw new Error(`Unknown function: ${name}`);
-        }
-    }
-
     // tool calling
-    async generateResponseWithTools(prompt: string): Promise<string> {
+    async generateResponseWithTools(prompt: string, mcpClient: Client): Promise<string> {
         try {
-            const tools: ChatCompletionTool[] = [
-                {
-                    type: "function",
-                    function: {
-                        name: "get_current_weather",
-                        description: "Fetches live weather data for a given location.",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                location: {
-                                    type: "string",
-                                    description: "City or region to fetch weather for, e.g., 'Yangon' or 'Thailand' "
-                                }
-                            },
-                            required: ["location"]
-                        }
-                    }
+            const { tools: mcpTools } = await mcpClient.listTools();
+            const tools: ChatCompletionTool[] = mcpTools.map((tool) => ({
+                type: "function",
+                function: {
+                    name: tool.name,
+                    description: tool.description,
+                    parameters: tool.inputSchema as ChatCompletionFunctionTool["function"]["parameters"],
                 },
+            }));
+
+            const messages: ChatCompletionMessageParam[] = [
                 {
-                    type: "function",
-                    function: {
-                        name: "get_all_customers",
-                        description: "Retrieves a list of all registered customers.",
-                        parameters: {
-                            type: "object",
-                            properties: {}
-                        }
-                    }
-                }
+                    role: "system",
+                    content: "You are an AI assistant specialized in E-commerce data(orders and customers) and weather data too.When the user asks a question about orders or customers or weather information, use a provided tools,**If the question is unrelated to your tools, answer using your intrinsic knowledge.** Be concise and do not mention the tools were used unless asked."
+                },
+                { role: "user", content: prompt }
             ];
 
-            const messages: ChatCompletionMessageParam[] = [{ role: "user", content: prompt }];
-
             for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-                const message = await this.callLLM(messages, tools);
+                const message = await this.callLLM(messages, tools.length ? tools : undefined);
 
                 // if the model answers directly
                 if (!message.tool_calls?.length) {
@@ -144,12 +111,15 @@ export class OpenaiService {
                         throw new Error(`Unsupported tool call type: ${toolCall.type}`);
                     }
                     const args = JSON.parse(toolCall.function.arguments || "{}") as Record<string, unknown>;
-                    const result = await this.runTool(toolCall.function.name, args);
+                    const result = await mcpClient.callTool({
+                        name: toolCall.function.name,
+                        arguments: args,
+                    });
 
                     messages.push({
                         role: "tool",
                         tool_call_id: toolCall.id,
-                        content: JSON.stringify(result),
+                        content: JSON.stringify(result.content),
                     });
                 }
             }
@@ -164,4 +134,4 @@ export class OpenaiService {
 
 }
 
-export const OPENAI = OpenaiService.getInstance();
+// instantiated on use so a missing OPENAI key doesn't break server boot

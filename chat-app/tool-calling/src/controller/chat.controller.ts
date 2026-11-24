@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { GEMINI } from "../services/gemini.service.ts";
+import { MCPClient } from "../mcp/client/mcp-client.service.ts";
 
 export class ChatController {
     static async generateResponse(req: Request, res: Response, next: NextFunction) {
@@ -11,7 +12,8 @@ export class ChatController {
 
         try {
 
-            const response = await GEMINI.generateResponseWithTools(message);
+            const mcp = await MCPClient.init();
+            const response = await GEMINI.generateResponseWithTools(message, mcp.client);
             res.json({ reply: response })
 
 
